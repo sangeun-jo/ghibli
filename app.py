@@ -131,7 +131,7 @@ def main():
                     if st.button("❤️", key=f"like_{img[0]}"):
                         c.execute("UPDATE images SET likes = likes + 1 WHERE id = ?", (img[0],))
                         conn.commit()
-                        st.experimental_rerun()
+                        st.rerun()
                     
                     st.write(f"좋아요: {img[4]}")
                     
@@ -143,7 +143,7 @@ def main():
                             c.execute("INSERT INTO comments (image_id, comment, created_at) VALUES (?, ?, ?)",
                                     (img[0], comment, datetime.now()))
                             conn.commit()
-                            st.experimental_rerun()
+                            st.rerun()
                     
                     # 댓글 표시
                     c.execute("SELECT comment, created_at FROM comments WHERE image_id = ? ORDER BY created_at DESC", (img[0],))
