@@ -7,6 +7,8 @@ import numpy as np
 import io
 from controlnet_aux import CannyDetector
 from huggingface_hub import login
+import os
+from datetime import datetime
 
 # Hugging Face 토큰으로 로그인
 if 'HUGGING_FACE_HUB_TOKEN' in st.secrets:
@@ -14,33 +16,41 @@ if 'HUGGING_FACE_HUB_TOKEN' in st.secrets:
 
 # 페이지 설정
 st.set_page_config(
-    page_title="기블리 스타일 변환기",
+    page_title="짭브리 스타일 변환기",
     page_icon="🎨",
     layout="wide"
 )
 
 # 제목
-st.title("🎨 기블리 스타일 이미지 변환기")
-st.markdown("### 당신의 사진을 기블리 스타일로 변환해보세요!")
+st.title("🎨 짭브리 스타일 이미지 변환기")
+st.markdown("### 당신의 사진을 짭브리 스타일로 변환해보세요!")
 
 # 모델 로드
 @st.cache_resource
 def load_models():
+    model_dir = "models"
+    if not os.path.exists(model_dir):
+        st.error("모델이 다운로드되지 않았습니다. 먼저 download_models.py를 실행해주세요.")
+        return None
+    
+    # ControlNet 모델 로드
     controlnet_canny = ControlNetModel.from_pretrained(
-        "lllyasviel/sd-controlnet-canny", torch_dtype=torch.float16
-    )
-    controlnet_depth = ControlNetModel.from_pretrained(
-        "lllyasviel/sd-controlnet-depth", torch_dtype=torch.float16
+        os.path.join(model_dir, "controlnet-canny")
     )
     
+    # Stable Diffusion 파이프라인 로드
     pipe = StableDiffusionControlNetPipeline.from_pretrained(
-        "nitrosocke/Ghibli-Diffusion",
-        controlnet=[controlnet_canny, controlnet_depth],
+        os.path.join(model_dir, "stable-diffusion-v1-5"),
+        controlnet=controlnet_canny,
         torch_dtype=torch.float16
     )
+    
+    # 스케줄러 설정
     pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
-    pipe.enable_model_cpu_offload()
-    pipe.to("cuda")
+    
+    # GPU 사용 설정
+    pipe = pipe.to("cuda")
+    
     return pipe
 
 # 이미지 전처리 함수
@@ -86,7 +96,7 @@ if uploaded_file is not None:
         st.image(original_image, use_column_width=True)
     
     # 변환 버튼
-    if st.button("기블리 스타일로 변환하기"):
+    if st.button("짭브리 스타일로 변환하기"):
         with st.spinner("이미지를 변환하는 중입니다..."):
             # 모델 로드
             pipe = load_models()
@@ -123,7 +133,7 @@ if uploaded_file is not None:
 with st.expander("사용 방법"):
     st.markdown("""
     1. '이미지 업로드' 버튼을 클릭하여 변환하고 싶은 이미지를 선택합니다.
-    2. '기블리 스타일로 변환하기' 버튼을 클릭합니다.
+    2. '짭브리 스타일로 변환하기' 버튼을 클릭합니다.
     3. 변환이 완료되면 결과 이미지를 확인하고 다운로드할 수 있습니다.
     
     **참고사항:**
