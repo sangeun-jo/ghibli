@@ -29,23 +29,23 @@ st.markdown("### 당신의 사진을 짭브리 스타일로 변환해보세요!"
 # 모델 로드
 @st.cache_resource
 def load_models():
-    # 운영체제 독립적인 경로 처리
-    model_dir = pathlib.Path("models")
-    if not model_dir.exists():
-        st.error("모델이 다운로드되지 않았습니다. 먼저 download_models.py를 실행해주세요.")
-        return None
-    
     try:
+        # 로컬 모델 파일 경로
+        controlnet_path = "models/controlnet-canny"
+        sd_path = "models/stable-diffusion-v1-5"
+        
         # ControlNet 모델 로드
         controlnet_canny = ControlNetModel.from_pretrained(
-            str(model_dir / "controlnet-canny")
+            controlnet_path,
+            local_files_only=True
         )
         
         # Stable Diffusion 파이프라인 로드
         pipe = StableDiffusionControlNetPipeline.from_pretrained(
-            str(model_dir / "stable-diffusion-v1-5"),
+            sd_path,
             controlnet=controlnet_canny,
-            torch_dtype=torch.float16
+            torch_dtype=torch.float16,
+            local_files_only=True
         )
         
         # 스케줄러 설정
