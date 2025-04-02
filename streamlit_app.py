@@ -5,6 +5,12 @@ import torch
 import cv2
 import numpy as np
 import io
+from controlnet_aux import CannyDetector
+from huggingface_hub import login
+
+# Hugging Face 토큰으로 로그인
+if 'HUGGING_FACE_HUB_TOKEN' in st.secrets:
+    login(token=st.secrets['HUGGING_FACE_HUB_TOKEN'])
 
 # 페이지 설정
 st.set_page_config(
@@ -48,23 +54,22 @@ def apply_canny(image):
 # 프롬프트 설정
 negative_prompt = (
     "realistic proportions, small eyes, sharp features, "
-    "traditional clothing, historical costume, "
-    "formal wear, fancy dress, outdated fashion, "
-    "angular face, harsh lines, pointed features, "
+    "traditional clothing, historical costume, "  # 전통적/과거 의상 제거
+    "formal wear, fancy dress, outdated fashion, "  # 격식있는 의상 제거
+    "angular face, harsh lines, pointed features,Wrinkles, "
     "photorealistic, small head, elongated face, "
-    "distorted, ugly, deformed, low quality, blurry, "
+    "distorted, angry, ugly, deformed, low quality, blurry, "
     "oversaturated colors, harsh shadows"
 )
 
 prompt = (
-    "Studio Ghibli style, high quality anime art, "
-    "large cute round eyes, soft gentle eye expression, "
-    "rounded cute face, soft circular features, "
-    "slightly enlarged head proportions, "
-    "modern casual clothing, contemporary fashion, "
-    "urban casual style, comfortable modern outfit, "
-    "clean line art, Miyazaki style character design, "
-    "soft color palette, detailed cel shading"
+    "realistic proportions, small eyes, sharp features, "
+    "traditional clothing, historical costume, "  # 전통적/과거 의상 제거
+    "formal wear, fancy dress, outdated fashion, "  # 격식있는 의상 제거
+    "angular face, harsh lines, pointed features,Wrinkles, "
+    "photorealistic, small head, elongated face, "
+    "distorted, angry, ugly, deformed, low quality, blurry, "
+    "oversaturated colors, harsh shadows"
 )
 
 # 파일 업로더
