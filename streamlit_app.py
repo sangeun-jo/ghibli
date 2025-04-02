@@ -9,6 +9,7 @@ from controlnet_aux import CannyDetector
 from huggingface_hub import login
 import os
 from datetime import datetime
+import pathlib
 
 # Hugging Face 토큰으로 로그인
 if 'HUGGING_FACE_HUB_TOKEN' in st.secrets:
@@ -28,30 +29,35 @@ st.markdown("### 당신의 사진을 짭브리 스타일로 변환해보세요!"
 # 모델 로드
 @st.cache_resource
 def load_models():
-    model_dir = "models"
-    if not os.path.exists(model_dir):
+    # 운영체제 독립적인 경로 처리
+    model_dir = pathlib.Path("models")
+    if not model_dir.exists():
         st.error("모델이 다운로드되지 않았습니다. 먼저 download_models.py를 실행해주세요.")
         return None
     
-    # ControlNet 모델 로드
-    controlnet_canny = ControlNetModel.from_pretrained(
-        os.path.join(model_dir, "controlnet-canny")
-    )
-    
-    # Stable Diffusion 파이프라인 로드
-    pipe = StableDiffusionControlNetPipeline.from_pretrained(
-        os.path.join(model_dir, "stable-diffusion-v1-5"),
-        controlnet=controlnet_canny,
-        torch_dtype=torch.float16
-    )
-    
-    # 스케줄러 설정
-    pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
-    
-    # GPU 사용 설정
-    pipe = pipe.to("cuda")
-    
-    return pipe
+    try:
+        # ControlNet 모델 로드
+        controlnet_canny = ControlNetModel.from_pretrained(
+            str(model_dir / "controlnet-canny")
+        )
+        
+        # Stable Diffusion 파이프라인 로드
+        pipe = StableDiffusionControlNetPipeline.from_pretrained(
+            str(model_dir / "stable-diffusion-v1-5"),
+            controlnet=controlnet_canny,
+            torch_dtype=torch.float16
+        )
+        
+        # 스케줄러 설정
+        pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
+        
+        # GPU 사용 설정
+        pipe = pipe.to("cuda")
+        
+        return pipe
+    except Exception as e:
+        st.error(f"모델 로드 중 오류가 발생했습니다: {str(e)}")
+        return None
 
 # 이미지 전처리 함수
 def apply_canny(image):
